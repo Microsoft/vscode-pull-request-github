@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { vscode } from './message';
-import { PullRequestStateEnum, IAccount, ReviewState } from '../src/github/interface';
+import { PullRequestStateEnum, IAccount, ILabel, ReviewState } from '../src/github/interface';
 import { TimelineEvent } from '../src/common/timelineEvent';
 import { ReposGetCombinedStatusForRefResponse } from '@octokit/rest';
 
@@ -21,7 +21,7 @@ export interface PullRequest {
 	isCurrentlyCheckedOut: boolean;
 	base: string;
 	head: string;
-	labels: string[];
+	labels: ILabel[];
 	commitsCount: number;
 	repositoryDefaultBranch: any;
 	canEdit: boolean;

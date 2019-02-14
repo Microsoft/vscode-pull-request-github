@@ -224,6 +224,7 @@ query PullRequest($owner: String!, $name: String!, $number: Int!) {
 			labels(first: 50) {
 				nodes {
 					name
+					color
 				}
 			}
 			merged

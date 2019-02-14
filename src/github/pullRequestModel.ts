@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { GitHubRef } from '../common/githubRef';
 import { Remote } from '../common/remote';
 import { GitHubRepository } from './githubRepository';
-import { IAccount, PullRequest, PullRequestStateEnum } from './interface';
+import { IAccount, ILabel, PullRequest, PullRequestStateEnum } from './interface';
 
 export class PullRequestModel {
 	public prNumber: number;
@@ -19,7 +19,7 @@ export class PullRequestModel {
 	public createdAt: string;
 	public updatedAt: string;
 	public localBranchName?: string;
-	public labels: string[];
+	public labels: ILabel[];
 	public mergeBase?: string;
 
 	public get isOpen(): boolean {
@@ -75,7 +75,7 @@ export class PullRequestModel {
 		this.bodyHTML = prItem.bodyHTML;
 		this.html_url = prItem.url;
 		this.author = prItem.user;
-		this.labels = (prItem.labels || []).map(label => label.name);
+		this.labels = (prItem.labels || []);
 
 		if (prItem.state.toLowerCase() === 'open') {
 			this.state = PullRequestStateEnum.Open;

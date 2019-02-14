@@ -106,7 +106,9 @@ function renderLabels(pr: PullRequest): void {
 	renderSection('labels', 'Labels', (): HTMLElement[] => {
 		return pr.labels.map(label => {
 			const labelElement = document.createElement('div');
-			labelElement.textContent = label;
+			labelElement.textContent = label.name;
+			labelElement.style.backgroundColor = `#${label.color}`;
+			labelElement.style.color = getContrastColor(label.color);
 			labelElement.classList.add('label', 'section-item');
 			return labelElement;
 		});
@@ -418,4 +420,17 @@ function setTextArea() {
 		const requestChangesButton = <HTMLButtonElement>document.getElementById(ElementIds.RequestChanges)!;
 		requestChangesButton.disabled = false;
 	}
+}
+
+function getContrastColor(hexColor: string) {
+	let bigint = parseInt(hexColor, 16);
+	/* tslint:disable:no-bitwise */
+	let r = (bigint >> 16) & 255;
+	let g = (bigint >> 8) & 255;
+	let b = bigint & 255;
+
+	// http://www.w3.org/TR/AERT#color-contrast
+	let o = Math.round(((r * 299) + (g * 587) + (b * 114)) / 1000);
+	let textColor = (o > 125) ? 'black' : 'white';
+	return textColor;
 }

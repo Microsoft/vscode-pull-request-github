@@ -268,6 +268,7 @@ export interface PullRequestResponse {
 				nodes: [
 					{
 						name: string;
+						color: string;
 					}
 				]
 			}
