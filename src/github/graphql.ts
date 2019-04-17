@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IAccount } from './interface';
+
 export interface MergedEvent {
 	__typename: string;
 	id: string;
@@ -309,4 +311,31 @@ export interface RateLimit {
 	cost: number;
 	remaining: number;
 	resetAt: string;
+}
+
+export interface PullRequestListItem {
+	nodeId: string;
+	number: number;
+	title: string;
+	url: string;
+	author: IAccount;
+	state: string;
+	assignees: {
+		nodes: IAccount[];
+	};
+	createdAt: string;
+	updatedAt: string;
+	merged: boolean;
+	headRef: Ref;
+	baseRef: Ref;
+}
+
+export interface PullRequestListResponse {
+	search: {
+		nodes: PullRequestListItem[];
+		pageInfo: {
+			hasNextPage: boolean;
+			endCursor: string;
+		};
+	};
 }

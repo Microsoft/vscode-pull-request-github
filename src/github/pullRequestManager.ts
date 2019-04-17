@@ -25,8 +25,8 @@ import { PendingReviewIdResponse, TimelineEventsResponse, PullRequestCommentsRes
 const queries = require('./queries.gql');
 
 interface PageInformation {
-	pullRequestPage: number;
 	hasMorePages: boolean | null;
+	endCursor: string | null;
 }
 
 interface RestErrorResult {
@@ -136,7 +136,7 @@ export class PullRequestManager {
 			Logger.debug(`Displaying configured remotes: ${remotesSetting.join(', ')}`, PullRequestManager.ID);
 
 			return remotesSetting
-				.map(remote =>  allGitHubRemotes.find(repo => repo.remoteName === remote))
+				.map(remote => allGitHubRemotes.find(repo => repo.remoteName === remote))
 				.filter(repo => !!repo) as Remote[];
 		}
 
@@ -401,8 +401,8 @@ export class PullRequestManager {
 				const remoteId = repository.remote.url.toString();
 				if (!this._repositoryPageInformation.get(remoteId)) {
 					this._repositoryPageInformation.set(remoteId, {
-						pullRequestPage: 1,
-						hasMorePages: null
+						hasMorePages: null,
+						endCursor: null
 					});
 				}
 			}
@@ -566,8 +566,8 @@ export class PullRequestManager {
 		if (!options.fetchNextPage) {
 			for (let repository of this._githubRepositories) {
 				this._repositoryPageInformation.set(repository.remote.url.toString(), {
-					pullRequestPage: 1,
-					hasMorePages: null
+					hasMorePages: null,
+					endCursor: null
 				});
 			}
 		}
@@ -579,15 +579,60 @@ export class PullRequestManager {
 
 		for (let i = 0; i < githubRepositories.length; i++) {
 			const githubRepository = githubRepositories[i];
+
 			const pageInformation = this._repositoryPageInformation.get(githubRepository.remote.url.toString())!;
-			const pullRequestData = await githubRepository.getPullRequests(type, pageInformation.pullRequestPage);
+			const pullRequestResponseData = await githubRepository.getPullRequestsGraphQL(type, pageInformation.endCursor);
+			const { remote } = await githubRepository.ensure();
 
-			pageInformation.hasMorePages = !!pullRequestData && pullRequestData.hasMorePages;
-			pageInformation.pullRequestPage++;
+			if(!!pullRequestResponseData) {
+				pageInformation.hasMorePages = pullRequestResponseData.search.pageInfo.hasNextPage;
+				pageInformation.endCursor = pullRequestResponseData.search.pageInfo.endCursor;
+			} else {
+				pageInformation.hasMorePages = false;
+				pageInformation.endCursor = null;
+			}
 
-			if (pullRequestData && pullRequestData.pullRequests.length) {
+			if (pullRequestResponseData && pullRequestResponseData.search.nodes.length) {
+				let pullRequestItems = pullRequestResponseData.search.nodes;
+
+				const pullRequests: PullRequestModel[] = pullRequestItems.map(pullRequestItem => {
+						let assignee: IAccount | undefined;
+						if(!!pullRequestItem.assignees.nodes && pullRequestItem.assignees.nodes.length) {
+							assignee = pullRequestItem.assignees.nodes[0];
+						}
+
+						const pullRequest: PullRequest = {
+							url: pullRequestItem.url,
+							assignee,
+							base: {
+								label: `${pullRequestItem.baseRef.repository.owner}:${pullRequestItem.baseRef.name}`,
+								ref: pullRequestItem.baseRef.name,
+								repo: {cloneUrl: pullRequestItem.baseRef.repository.url },
+								sha: pullRequestItem.baseRef.target.oid
+							},
+							head: {
+								label: `${pullRequestItem.headRef.repository.owner}:${pullRequestItem.headRef.name}`,
+								ref: pullRequestItem.headRef.name,
+								repo: {cloneUrl: pullRequestItem.headRef.repository.url },
+								sha: pullRequestItem.baseRef.target.oid
+							},
+							labels: [],
+							body: '',
+							createdAt: pullRequestItem.createdAt,
+							updatedAt: pullRequestItem.updatedAt,
+							merged: pullRequestItem.merged,
+							nodeId: pullRequestItem.nodeId,
+							number: pullRequestItem.number,
+							state: pullRequestItem.state,
+							title: pullRequestItem.title,
+							user: pullRequestItem.author
+						};
+
+						return new PullRequestModel(githubRepository, remote, pullRequest);
+					});
+
 				return {
-					pullRequests: pullRequestData.pullRequests,
+					pullRequests: pullRequests,
 					hasMorePages: pageInformation.hasMorePages,
 					hasUnsearchedRepositories: i < githubRepositories.length - 1
 				};

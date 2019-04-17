@@ -112,6 +112,15 @@ fragment Reactable on Reactable {
 	}
 }
 
+fragment Account on Actor{
+    ... on User {
+        name
+    }
+    login
+    url
+    avatarUrl
+}
+
 query TimelineEvents($owner: String!, $name: String!, $number: Int!, $last: Int = 100) {
 	repository(owner: $owner, name: $name) {
 		pullRequest(number: $number) {
@@ -337,4 +346,39 @@ query GetMentionableUsers($owner: String!, $name: String!, $first: Int!, $after:
 		remaining
 		resetAt
 	}
+}
+
+query GetPullRequests($query: String!, $first: Int!, $after: String) {
+  search(query: $query, first: $first, after:$after, type: ISSUE) {
+    nodes {
+        ... on PullRequest {
+            nodeId: id
+            number
+            title
+            url
+            author {
+                ...Account
+            }
+            state
+            assignees(first: 30) {
+                nodes {
+                    ...Account
+                }
+            }
+            createdAt
+            updatedAt
+            merged
+            headRef {
+            ...Ref
+            }
+            baseRef {
+            ...Ref
+            }
+        }
+    }
+    pageInfo {
+        hasNextPage
+        endCursor
+    }
+  }
 }

@@ -73,17 +73,11 @@ export class PRCategoryActionNode extends TreeNode implements vscode.TreeItem {
 	}
 }
 
-interface PageInformation {
-	pullRequestPage: number;
-	hasMorePages: boolean;
-}
-
 export class CategoryTreeNode extends TreeNode implements vscode.TreeItem {
 	public readonly label: string;
 	public collapsibleState: vscode.TreeItemCollapsibleState;
 	public prs: PullRequestModel[];
 	public fetchNextPage: boolean = false;
-	public repositoryPageInformation: Map<string, PageInformation> = new Map<string, PageInformation>();
 
 	constructor(
 		public parent: TreeNode | vscode.TreeView<TreeNode>,
@@ -170,12 +164,14 @@ export class CategoryTreeNode extends TreeNode implements vscode.TreeItem {
 			}
 		}
 
-		if (this.prs && this.prs.length) {
+		if (this.prs) {
 			let nodes: TreeNode[] = this.prs.map(prItem => new PRNode(this, this._prManager, prItem, this._type === PRType.LocalPullRequest));
 			if (hasMorePages) {
 				nodes.push(new PRCategoryActionNode(this, PRCategoryActionType.More, this));
 			} else if (hasUnsearchedRepositories) {
 				nodes.push(new PRCategoryActionNode(this, PRCategoryActionType.TryOtherRemotes, this));
+			} else if(this.prs.length === 0) {
+				nodes.push(new PRCategoryActionNode(this, PRCategoryActionType.Empty, this));
 			}
 
 			this.childrenDisposables = nodes;

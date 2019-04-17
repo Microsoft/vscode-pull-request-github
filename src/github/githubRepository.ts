@@ -14,7 +14,7 @@ import { AuthenticationError } from '../common/authentication';
 import { QueryOptions, MutationOptions, ApolloQueryResult, NetworkStatus, FetchResult } from 'apollo-boost';
 import { PRDocumentCommentProvider } from '../view/prDocumentCommentProvider';
 import { convertRESTPullRequestToRawPullRequest, parseGraphQLPullRequest } from './utils';
-import { PullRequestResponse, MentionableUsersResponse } from './graphql';
+import { PullRequestResponse, MentionableUsersResponse, PullRequestListResponse } from './graphql';
 const queries = require('./queries.gql');
 
 export const PULL_REQUEST_PAGE_SIZE = 20;
@@ -205,103 +205,44 @@ export class GitHubRepository implements IGitHubRepository, vscode.Disposable {
 		};
 	}
 
-	async getPullRequests(prType: PRType, page?: number): Promise<PullRequestData | undefined> {
-		return prType === PRType.All ? this.getAllPullRequests(page) : this.getPullRequestsForCategory(prType, page);
-	}
+	async getPullRequestsGraphQL(type: PRType, nextCursor?: string|null):Promise<PullRequestListResponse|undefined> {
+		const { remote, query, octokit } = await this.ensure();
+		const currentUser = octokit && (octokit as any).currentUser;
+		const currentUserLogin: string = currentUser.login;
 
-	private async getAllPullRequests(page?: number): Promise<PullRequestData | undefined> {
-		try {
-			Logger.debug(`Fetch all pull requests - enter`, GitHubRepository.ID);
-			const { octokit, remote } = await this.ensure();
-			const result = await octokit.pullRequests.getAll({
-				owner: remote.owner,
-				repo: remote.repositoryName,
-				per_page: PULL_REQUEST_PAGE_SIZE,
-				page: page || 1
-			});
+		let filter = `type:pr is:open repo:${remote.owner}/${remote.repositoryName}`;
 
-			const hasMorePages = !!result.headers.link && result.headers.link.indexOf('rel="next"') > -1;
-			const pullRequests = result.data
-				.map(
-					pullRequest => {
-						if (!pullRequest.head.repo) {
-							Logger.appendLine(
-								'GitHubRepository> The remote branch for this PR was already deleted.'
-							);
-							return null;
-						}
-
-						const item = convertRESTPullRequestToRawPullRequest(pullRequest);
-						return new PullRequestModel(this, this.remote, item);
-					}
-				)
-				.filter(item => item !== null) as PullRequestModel[];
-
-			Logger.debug(`Fetch all pull requests - done`, GitHubRepository.ID);
-			return {
-				pullRequests,
-				hasMorePages
-			};
-		} catch (e) {
-			Logger.appendLine(`Fetching all pull requests failed: ${e}`, GitHubRepository.ID);
-			if (e.code === 404) {
-				// not found
-				vscode.window.showWarningMessage(`Fetching pull requests for remote '${this.remote.remoteName}' failed, please check if the url ${this.remote.url} is valid.`);
+		if (type !== PRType.All) {
+			if (type === PRType.Mine) {
+				filter += ` author:${currentUserLogin}`;
+			} else if (type === PRType.RequestReview) {
+				filter += ` review-requested:${currentUserLogin}`;
+			} else if (type === PRType.AssignedToMe) {
+				filter += ` assignee:${currentUserLogin}`;
 			} else {
-				throw e;
+				throw new Error('Unexpected pull request filter: ' + PRType[type]);
 			}
 		}
-	}
 
-	private async getPullRequestsForCategory(prType: PRType, page?: number): Promise<PullRequestData | undefined> {
-		try {
-			Logger.debug(`Fetch pull request catogory ${PRType[prType]} - enter`, GitHubRepository.ID);
-			const { octokit, remote } = await this.ensure();
-			const user = await octokit.users.get({});
-			// Search api will not try to resolve repo that redirects, so get full name first
-			const repo = await octokit.repos.get({ owner: this.remote.owner, repo: this.remote.repositoryName });
-			const { data, headers } = await octokit.search.issues({
-				q: this.getPRFetchQuery(repo.data.full_name, user.data.login, prType),
-				per_page: PULL_REQUEST_PAGE_SIZE,
-				page: page || 1
-			});
-			let promises: Promise<Octokit.Response<Octokit.PullRequestsGetResponse>>[] = [];
-			data.items.forEach((item: any /** unluckily Octokit.AnyResponse */) => {
-				promises.push(new Promise(async (resolve, reject) => {
-					let prData = await octokit.pullRequests.get({
-						owner: remote.owner,
-						repo: remote.repositoryName,
-						number: item.number
-					});
-					resolve(prData);
-				}));
-			});
+		const variables : {
+			query: string;
+			first: number;
+			after?: string;
+		} = {
+			query: filter,
+			first: 30
+		};
 
-			const hasMorePages = !!headers.link && headers.link.indexOf('rel="next"') > -1;
-			const pullRequests = await Promise.all(promises).then(values => {
-				return values.map(item => {
-					if (!item.data.head.repo) {
-						Logger.appendLine('GitHubRepository> The remote branch for this PR was already deleted.');
-						return null;
-					}
-					return new PullRequestModel(this, this.remote, convertRESTPullRequestToRawPullRequest(item.data));
-				}).filter(item => item !== null) as PullRequestModel[];
-			});
-			Logger.debug(`Fetch pull request catogory ${PRType[prType]} - done`, GitHubRepository.ID);
-
-			return {
-				pullRequests,
-				hasMorePages
-			};
-		} catch (e) {
-			Logger.appendLine(`GitHubRepository> Fetching all pull requests failed: ${e}`);
-			if (e.code === 404) {
-				// not found
-				vscode.window.showWarningMessage(`Fetching pull requests for remote ${this.remote.remoteName}, please check if the url ${this.remote.url} is valid.`);
-			} else {
-				throw e;
-			}
+		if(!!nextCursor) {
+			variables.after = nextCursor;
 		}
+
+		const { data } = await query<PullRequestListResponse>({
+			query: queries.GetPullRequests,
+			variables
+		});
+
+		return data;
 	}
 
 	async getPullRequest(id: number): Promise<PullRequestModel | undefined> {
@@ -386,24 +327,5 @@ export class GitHubRepository implements IGitHubRepository, vscode.Disposable {
 		}
 
 		return [];
-	}
-
-	private getPRFetchQuery(repo: string, user: string, type: PRType) {
-		let filter = '';
-		switch (type) {
-			case PRType.RequestReview:
-				filter = `review-requested:${user}`;
-				break;
-			case PRType.AssignedToMe:
-				filter = `assignee:${user}`;
-				break;
-			case PRType.Mine:
-				filter = `author:${user}`;
-				break;
-			default:
-				break;
-		}
-
-		return `is:open ${filter} type:pr repo:${repo}`;
 	}
 }
