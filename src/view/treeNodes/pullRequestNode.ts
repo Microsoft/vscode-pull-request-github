@@ -387,6 +387,7 @@ export class PRNode extends TreeNode implements CommentHandler, vscode.Commentin
 			title,
 			prNumber,
 			author,
+			mergeable
 		} = this.pullRequestModel;
 
 		const {
@@ -400,13 +401,18 @@ export class PRNode extends TreeNode implements CommentHandler, vscode.Commentin
 		const tooltip = `${tooltipPrefix}${title} (#${formattedPRNumber}) by @${login}`;
 		const description = `#${formattedPRNumber} by @${login}`;
 
+		const iconPath = {
+			light: mergeable ? 'resources/icons/light/check.svg' : 'resources/icons/delete.svg',
+			dark: mergeable ? 'resources/icons/light/check.svg' : 'resources/icons/delete.svg'}
+		;
+
 		return {
 			label,
 			tooltip,
 			description,
 			collapsibleState: 1,
 			contextValue: 'pullrequest' + (this._isLocal ? ':local' : '') + (currentBranchIsForThisPR ? ':active' : ':nonactive'),
-			iconPath: this.pullRequestModel.userAvatarUri
+			iconPath
 		};
 	}
 
