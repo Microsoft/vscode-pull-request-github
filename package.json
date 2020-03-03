@@ -359,6 +359,21 @@
         }
       },
       {
+        "command": "pr.openAllDiffViews",
+        "title": "Open All Diff Views",
+        "category": "GitHub Pull Requests"
+      },
+      {
+        "command": "pr.openAllModifiedFiles",
+        "title": "Open All Modified Files",
+        "category": "GitHub Pull Requests"
+      },
+      {
+        "command": "pr.openAllOriginalFiles",
+        "title": "Open All Original Files",
+        "category": "GitHub Pull Requests"
+      },
+      {
         "command": "pr.openChangedFile",
         "title": "Open Changed File in PR",
         "category": "GitHub Pull Requests"
@@ -577,11 +592,27 @@
           "when": "false"
         },
         {
-          "command": "pr.openOriginalFile",
+          "command": "pr.openDiffView",
           "when": "false"
         },
         {
           "command": "pr.openModifiedFile",
+          "when": "false"
+        },
+        {
+          "command": "pr.openOriginalFile",
+          "when": "false"
+        },
+        {
+          "command": "pr.openAllDiffViews",
+          "when": "false"
+        },
+        {
+          "command": "pr.openAllModifiedFiles",
+          "when": "false"
+        },
+        {
+          "command": "pr.openAllOriginalFiles",
           "when": "false"
         },
         {
@@ -590,10 +621,6 @@
         },
         {
           "command": "pr.deleteLocalBranch",
-          "when": "false"
-        },
-        {
-          "command": "pr.openDiffView",
           "when": "false"
         },
         {
@@ -730,6 +757,18 @@
         {
           "command": "pr.openModifiedFile",
           "when": "view =~ /(pr|prStatus)/ && viewItem =~ /filechange:MODIFY/"
+        },
+        {
+          "command": "pr.openAllDiffViews",
+          "when": "view =~ /prStatus/ && viewItem =~ /directory|files/"
+        },
+        {
+          "command": "pr.openAllModifiedFiles",
+          "when": "view =~ /prStatus/ && viewItem =~ /directory|files/"
+        },
+        {
+          "command": "pr.openAllOriginalFiles",
+          "when": "view =~ /prStatus/ && viewItem =~ /directory|files/"
         }
       ],
       "editor/title": [

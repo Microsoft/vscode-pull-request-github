@@ -11,10 +11,12 @@ import { DirectoryTreeNode } from './directoryTreeNode';
 export class FilesCategoryNode extends TreeNode implements vscode.TreeItem {
 	public label: string = 'Files';
 	public collapsibleState: vscode.TreeItemCollapsibleState;
-	private directories: TreeNode[] = [];
+	public contextValue?: string;
+	public directories: TreeNode[] = [];
 
 	constructor(public parent: TreeNode | vscode.TreeView<TreeNode>, private _fileChanges: (GitFileChangeNode | RemoteFileChangeNode)[]) {
 		super();
+		this.contextValue = 'files';
 		this.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
 		// tree view
