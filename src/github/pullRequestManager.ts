@@ -120,6 +120,7 @@ enum PagedDataType {
 export class PullRequestManager implements vscode.Disposable {
 	static ID = 'PullRequestManager';
 
+	private api: ApiImpl;
 	private _subs: vscode.Disposable[];
 	private _activePullRequest?: PullRequestModel;
 	private _activeIssue?: IssueModel;
@@ -1328,6 +1329,36 @@ export class PullRequestManager implements vscode.Disposable {
 			const branchNameSeparatorIndex = params.head.indexOf(':');
 			const branchName = params.head.slice(branchNameSeparatorIndex + 1);
 			await PullRequestGitHelper.associateBranchWithPullRequest(this._repository, pullRequestModel, branchName);
+			const pullRequest: PullRequest = {
+				suggestedReviewers: [],
+				graphNodeId: data.node_id,
+				mergeable: data.mergeable ? PullRequestMergeability.Mergeable : PullRequestMergeability.NotMergeable,
+				id: data.id,
+				url: data.url,
+				number: data.number,
+				state: data.state,
+				body: data.body,
+				title: data.title,
+				assignee: data.assignee,
+				createdAt: data.created_at,
+				updatedAt: data.updated_at,
+				head: {
+					label: data.head.label,
+					ref: data.head.ref,
+					sha: data.head.sha,
+					repo: { cloneUrl: data.head.repo.clone_url }
+				},
+				base: {
+					label: data.base.label,
+					ref: data.base.ref,
+					sha: data.base.sha,
+					repo: { cloneUrl: data.base.repo.clone_url }
+				},
+				user: data.user,
+				labels: data.labels,
+				merged: false
+			};
+			this.api.onPullRequestCreatedEmitter.fire(pullRequest);
 
 			/* __GDPR__
 				"pr.create.success" : {
