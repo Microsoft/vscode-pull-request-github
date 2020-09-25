@@ -143,6 +143,7 @@ export class PRContext {
 				.filter(e => isReviewEvent(e) ? e.state !== 'PENDING' : e),
 			review
 		];
+		state.reviewState = review.state;
 		this.updatePR(state);
 	}
 
