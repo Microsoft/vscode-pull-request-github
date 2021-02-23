@@ -47,21 +47,21 @@ describe('Issues utilities', function () {
 
 	describe('sanitizeIssueTitle', () => {
 		[
-			{ input: 'Issue', expected: 'Issue' },
-			{ input: 'Issue A', expected: 'Issue-A' },
-			{ input: 'Issue \ A', expected: 'Issue-A' },
-			{ input: 'Issue     A', expected: 'Issue-A' },
-			{ input: 'Issue @ A', expected: 'Issue-A' },
-			{ input: 'Issue \'A\'', expected: 'Issue-A' },
-			{ input: 'Issue "A"', expected: 'Issue-A' },
-			{ input: '@Issue "A"', expected: 'Issue-A' },
-			{ input: 'Issue "A"%', expected: 'Issue-A' },
-			{ input: 'Issue .A', expected: 'Issue-A' },
-			{ input: 'Issue ,A', expected: 'Issue-A' },
-			{ input: 'Issue :A', expected: 'Issue-A' },
-			{ input: 'Issue ;A', expected: 'Issue-A' },
-			{ input: 'Issue ~A', expected: 'Issue-A' },
-			{ input: 'Issue #A', expected: 'Issue-A' },
+			{ input: 'Issue', expected: 'issue' },
+			{ input: 'Issue A', expected: 'issue-a' },
+			{ input: 'Issue \ A', expected: 'issue-a' },
+			{ input: 'Issue     A', expected: 'issue-a' },
+			{ input: 'Issue @ A', expected: 'issue-a' },
+			{ input: 'Issue \'A\'', expected: 'issue-a' },
+			{ input: 'Issue "A"', expected: 'issue-a' },
+			{ input: '@Issue "A"', expected: 'issue-a' },
+			{ input: 'Issue "A"%', expected: 'issue-a' },
+			{ input: 'Issue .A', expected: 'issue-a' },
+			{ input: 'Issue ,A', expected: 'issue-a' },
+			{ input: 'Issue :A', expected: 'issue-a' },
+			{ input: 'Issue ;A', expected: 'issue-a' },
+			{ input: 'Issue ~A', expected: 'issue-a' },
+			{ input: 'Issue #A', expected: 'issue-a' },
 		]
 		.forEach((testCase) => {
 			it(`Transforms '${testCase.input}' into '${testCase.expected}'`, () => {

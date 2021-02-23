@@ -422,7 +422,8 @@ export function sanitizeIssueTitle(title: string): string {
 	return title
 		.replace(regex, '')
 		.trim()
-		.replace(/\s+/g, '-');
+		.replace(/\s+/g, '-')
+		.toLowerCase();
 }
 
 const VARIABLE_PATTERN = /\$\{(.*?)\}/g;
