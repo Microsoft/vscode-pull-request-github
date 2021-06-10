@@ -55,7 +55,7 @@ export class PullRequestGitHelper {
 		await repository.checkout(localBranchName);
 		// set remote tracking branch for the local branch
 		await repository.setBranchUpstream(localBranchName, `refs/remotes/${remoteName}/${pullRequest.head.ref}`);
-		await this.unshallow(repository);
+		await this.unshallow(repository, remoteName, ref);
 		PullRequestGitHelper.associateBranchWithPullRequest(repository, pullRequest, localBranchName);
 	}
 
@@ -91,7 +91,7 @@ export class PullRequestGitHelper {
 
 			if (branch.behind !== undefined && branch.behind > 0 && branch.ahead === 0) {
 				Logger.debug(`Pull from upstream`, PullRequestGitHelper.ID);
-				await repository.pull();
+				await repository.pull({remote: remoteName, ref: branchName});
 			}
 		} catch (err) {
 			// there is no local branch with the same name, so we are good to fetch, create and checkout the remote branch.
@@ -106,7 +106,7 @@ export class PullRequestGitHelper {
 			// create branch
 			await repository.createBranch(branchName, true, trackedBranch.commit);
 			await repository.setBranchUpstream(branchName, trackedBranchName);
-			await this.unshallow(repository);
+			await this.unshallow(repository, remoteName, branchName);
 		}
 
 		await PullRequestGitHelper.associateBranchWithPullRequest(repository, pullRequest, branchName);
@@ -116,12 +116,12 @@ export class PullRequestGitHelper {
 	 * Attempt to unshallow the repository. If it has been unshallowed in the interim, running with `--unshallow`
 	 * will fail, so fall back to a normal pull.
 	 */
-	static async unshallow(repository: Repository): Promise<void> {
+	static async unshallow(repository: Repository, remoteName: string, branchName: string): Promise<void> {
 		try {
-			await repository.pull(true);
+			await repository.pull({remote: remoteName, ref: branchName, unshallow: true});
 		} catch (e) {
 			Logger.appendLine(`Unshallowing failed: ${e}. Falling back to git pull`);
-			await repository.pull();
+			await repository.pull({remote: remoteName, ref: branchName});
 		}
 	}
 

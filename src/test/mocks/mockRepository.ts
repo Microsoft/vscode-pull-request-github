@@ -13,6 +13,7 @@ import {
 	Ref,
 	BranchQuery,
 	FetchOptions,
+	PullOptions,
 } from '../../api/api';
 
 type Mutable<T> = {
@@ -68,7 +69,7 @@ export class MockRepository implements Repository {
 	private _config: Map<string, string> = new Map();
 	private _branches: Branch[] = [];
 	private _expectedFetches: { remoteName?: string; ref?: string; depth?: number }[] = [];
-	private _expectedPulls: { unshallow?: boolean }[] = [];
+	private _expectedPulls: { remote?: string, ref?: string, unshallow?: boolean }[] = [];
 	private _expectedPushes: { remoteName?: string; branchName?: string; setUpstream?: boolean }[] = [];
 
 	inputBox: InputBox = { value: '' };
@@ -269,10 +270,22 @@ export class MockRepository implements Repository {
 		this._expectedFetches.splice(index, 1);
 	}
 
-	async pull(unshallow?: boolean | undefined): Promise<void> {
-		const index = this._expectedPulls.findIndex(f => f.unshallow === unshallow);
+	async pull(arg0?: PullOptions | boolean | undefined): Promise<void> {
+		let remote: string | undefined;
+		let ref: string | undefined;
+		let unshallow: boolean | undefined;
+		if (typeof arg0 === 'object') {
+			remote = arg0.remote;
+			ref = arg0.ref;
+			unshallow = arg0.unshallow;
+		} else {
+			unshallow = arg0;
+		}
+		const index = this._expectedPulls.findIndex(
+			f => f.remote === remote && f.ref === ref && f.unshallow === unshallow,
+		);
 		if (index === -1) {
-			throw new Error(`Unexpected pull(${unshallow})`);
+			throw new Error(`Unexpected pull(${remote}, ${ref}, ${unshallow})`);
 		}
 		this._expectedPulls.splice(index, 1);
 	}
@@ -299,8 +312,8 @@ export class MockRepository implements Repository {
 		this._expectedFetches.push({ remoteName, ref, depth });
 	}
 
-	expectPull(unshallow?: boolean) {
-		this._expectedPulls.push({ unshallow });
+	expectPull(remote?: string, ref?: string, unshallow?: boolean) {
+		this._expectedPulls.push({ remote, ref, unshallow });
 	}
 
 	expectPush(remoteName?: string, branchName?: string, setUpstream?: boolean) {

@@ -56,7 +56,7 @@ describe('PullRequestGitHelper', function () {
 			);
 
 			repository.expectFetch('you', 'my-branch:pr/me/100', 1);
-			repository.expectPull(true);
+			repository.expectPull('you', 'my-branch:pr/me/100', true);
 
 			const pullRequest = new PullRequestModel(telemetry, gitHubRepository, remote, prItem);
 
