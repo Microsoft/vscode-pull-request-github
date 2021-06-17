@@ -197,7 +197,13 @@ export class ReviewManager {
 		if (branch) {
 			const remote = branch.upstream ? branch.upstream.remote : null;
 			if (remote) {
-				await this._repository.fetch(remote, this._repository.state.HEAD?.name);
+				const configs = await this._repository.getConfigs();
+
+				const readConfig = (searchKey: string): string | undefined =>
+					configs.filter(({ key: k }) => searchKey === k).map(({ value }) => value)[0];
+
+				const ref = readConfig(`branch.${this._repository.state.HEAD?.name}.merge`);
+				await this._repository.fetch(remote, ref);
 				if (
 					(pr.head.sha !== this._lastCommitSha || (branch.behind !== undefined && branch.behind > 0)) &&
 					!this._updateMessageShown
