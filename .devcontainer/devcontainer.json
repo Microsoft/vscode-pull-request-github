@@ -1,0 +1,19 @@
+// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+{
+	"name": "Node.js (latest LTS) & TypeScript",
+	"dockerFile": "Dockerfile",
+	"postCreateCommand": "yarn install",
+	"extensions": [
+		"ms-vscode.vscode-typescript-tslint-plugin",
+		"github.vscode-pull-request-github-insiders",
+		"eamodio.gitlens"
+	],
+	/**
+	* NOTE: Modify "${env:HOME}/dev" to point to the directory you want to mount into the container. Currently
+	* the `workspaceFolder` variable isn't supported, but this should be updated to use it when available.
+	* This is used to mount a directory that contains both `vscode-pull-request-github` and repositories
+	* used for testing.
+	*/
+	"runArgs": ["-v", "${env:HOME}/dev:/root/dev"],
+	"workspaceFolder": "/root/dev/vscode-pull-request-github"
+}
