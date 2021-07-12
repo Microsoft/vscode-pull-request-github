@@ -3,13 +3,19 @@
 	"configurations": [
 		{
 			"name": "Launch Extension",
-			"type": "extensionHost",
+			"type": "pwa-extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--disable-extension=GitHub.vscode-pull-request-github-insiders"
 			],
+			"cwd": "${workspaceFolder}",
+			"debugWebviews": true,
+			"rendererDebugOptions": {
+				"sourceMaps": true,
+				"webRoot": "${workspaceFolder}/webviews"
+			},
 			"skipFiles": ["<node_internals>/**/*.js", "**/node_modules/**/*.js"],
 			"smartStep": true,
 			"sourceMaps": true,
@@ -25,6 +31,12 @@
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--disable-extension=GitHub.vscode-pull-request-github-insiders"
 			],
+			"cwd": "${workspaceFolder}",
+			"debugWebviews": true,
+			"rendererDebugOptions": {
+				"sourceMaps": true,
+				"webRoot": "${workspaceFolder}/webviews"
+			},
 			"skipFiles": ["<node_internals>/**/*.js", "**/node_modules/**/*.js"],
 			"smartStep": true,
 			"sourceMaps": true,
@@ -32,15 +44,21 @@
 		},
 		{
 			"name": "Watch & Launch Extension",
-			"type": "extensionHost",
+			"type": "pwa-extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--disable-extension=GitHub.vscode-pull-request-github-insiders"
 			],
+			"cwd": "${workspaceFolder}",
+			"debugWebviews": true,
+			"rendererDebugOptions": {
+				"sourceMaps": true,
+				"webRoot": "${workspaceFolder}/webviews"
+			},
 			"skipFiles": ["<node_internals>/**/*.js", "**/node_modules/**/*.js"],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "${defaultBuildTask}",
 			"smartStep": true,
 			"sourceMaps": true,
 			"outFiles": ["${workspaceFolder}/dist/*.js"]
@@ -55,8 +73,14 @@
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--disable-extension=GitHub.vscode-pull-request-github-insiders"
 			],
+			"cwd": "${workspaceFolder}",
+			"debugWebviews": true,
+			"rendererDebugOptions": {
+				"sourceMaps": true,
+				"webRoot": "${workspaceFolder}/webviews"
+			},
 			"skipFiles": ["<node_internals>/**/*.js", "**/node_modules/**/*.js"],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "${defaultBuildTask}",
 			"smartStep": true,
 			"sourceMaps": true,
 			"outFiles": ["${workspaceFolder}/dist/browser/*.js"]
