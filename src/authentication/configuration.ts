@@ -27,7 +27,7 @@ export const HostHelper = class {
 		}
 
 		const hostUri: vscode.Uri = host instanceof vscode.Uri ? host : vscode.Uri.parse(host.host);
-		if (hostUri.authority === 'github.com') {
+		if (hostUri.authority === 'github.com' || hostUri.authority === 'ssh.github.com') {
 			return vscode.Uri.parse('https://api.github.com');
 		} else {
 			return vscode.Uri.parse(`${hostUri.scheme}://${hostUri.authority}`);
@@ -36,7 +36,7 @@ export const HostHelper = class {
 
 	public static getApiPath(host: IHostConfiguration | vscode.Uri, path: string): string {
 		const hostUri: vscode.Uri = host instanceof vscode.Uri ? host : vscode.Uri.parse(host.host);
-		if (hostUri.authority === 'github.com') {
+		if (hostUri.authority === 'github.com' || hostUri.authority === 'ssh.github.com') {
 			return path;
 		} else {
 			return `/api/v3${path}`;

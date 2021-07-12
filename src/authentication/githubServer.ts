@@ -17,8 +17,9 @@ export class GitHubManager {
 			return false;
 		}
 
-		if (this._servers.has(host.authority)) {
-			return !!this._servers.get(host.authority);
+		let authority = host.authority === 'ssh.github.com' ? 'github.com' : host.authority;
+		if (this._servers.has(authority)) {
+			return !!this._servers.get(authority);
 		}
 
 		const [uri, options] = await GitHubManager.getOptions(host, 'HEAD', '/rate_limit');
